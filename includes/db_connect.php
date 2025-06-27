@@ -1,23 +1,8 @@
 <?php
-// === START: NEW & FINAL - ROBUST BASE_URL DEFINITION ===
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-$host = $_SERVER['HTTP_HOST'];
-
-// This reliably finds the path from the web root to the 'includes' folder
-$script_path = str_replace('\\', '/', dirname(__FILE__));
-$document_root = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
-$project_path_part = str_replace($document_root, '', $script_path);
-
-// Go up one level from 'includes' to get the project's base path
-$base_path = dirname($project_path_part);
-
-// If the project is in the root, the path might be just '\' or '/', handle that.
-if ($base_path == '/' || $base_path == '\\') {
-    $base_path = '';
-}
-
-// Define the final, correct BASE_URL
-define('BASE_URL', $protocol . $host . $base_path . '/');
+// === START: THE DEFINITIVE, HARDCODED BASE_URL ===
+// This is the simplest and most reliable method for your local setup.
+// It will never fail.
+define('BASE_URL', 'http://localhost/roterfil-juanunit/');
 // === END: BASE_URL Definition ===
 
 

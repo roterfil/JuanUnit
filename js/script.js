@@ -25,7 +25,6 @@ window.onclick = function(event) {
     });
 };
 
-// *** NEW: Function to open the proof viewer modal ***
 function openProofModal(filePath) {
     const proofContent = document.getElementById('proofContent');
     if (!proofContent) {
@@ -33,14 +32,11 @@ function openProofModal(filePath) {
         return;
     }
 
-    // Check file extension to determine how to display it
     const isPdf = filePath.toLowerCase().endsWith('.pdf');
 
     if (isPdf) {
-        // Embed PDF for viewing within the modal
         proofContent.innerHTML = `<embed src="${filePath}" type="application/pdf" width="100%" height="600px" />`;
     } else {
-        // Display as an image
         proofContent.innerHTML = `<img src="${filePath}" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" alt="Proof of Payment">`;
     }
 
@@ -50,7 +46,6 @@ function openProofModal(filePath) {
 
 // --- 2. ADMIN-SIDE DYNAMIC FUNCTIONS ---
 
-// Function to open and populate the "Edit Unit" modal
 function openEditUnitModal(unitId) {
     fetch(`get_unit_data.php?id=${unitId}`)
         .then(response => response.json())
@@ -83,7 +78,6 @@ function openEditUnitModal(unitId) {
         });
 }
 
-// Function to load tenants in the "Add Payment" modal
 function loadUnitDetails() {
     const unitSelect = document.getElementById('unit_id');
     const unitDetails = document.getElementById('unit-details');
@@ -94,7 +88,6 @@ function loadUnitDetails() {
     const useRentBtn = document.getElementById('useUnitRentBtn');
 
     if (!unitSelect || !unitDetails || !unitRent || !tenantCount || !tenantsList || !amountInput) {
-        console.error("One or more required modal elements are missing from the DOM.");
         return;
     }
 
@@ -111,10 +104,7 @@ function loadUnitDetails() {
         if (useRentBtn) useRentBtn.style.display = 'inline-block';
         
         fetch(`get_unit_tenants.php?unit_id=${unitId}`)
-            .then(response => {
-                if (!response.ok) throw new Error(`Network response was not ok, status: ${response.status}`);
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.success === false && data.reason === 'auth') {
                     alert('Your session has expired. Please log in again.');
@@ -153,7 +143,6 @@ function loadUnitDetails() {
     }
 }
 
-// Function to use the unit's rent amount in the payment form
 function useUnitRent() {
     const unitSelect = document.getElementById('unit_id');
     const amountInput = document.getElementById('amount');
@@ -170,7 +159,6 @@ function useUnitRent() {
 
 // --- 3. HELPER FUNCTIONS ---
 
-// Show/hide password
 function togglePassword(inputId, iconId) {
     const input = document.getElementById(inputId);
     const icon = document.getElementById(iconId);
@@ -184,7 +172,6 @@ function togglePassword(inputId, iconId) {
     }
 }
 
-// Simple search for tables
 function searchTable(inputId, tableId) {
     const input = document.getElementById(inputId);
     const table = document.getElementById(tableId);
@@ -204,7 +191,6 @@ function searchTable(inputId, tableId) {
     }
 }
 
-// Smooth scrolling for anchor links on the landing page
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         const targetId = this.getAttribute('href');
@@ -219,9 +205,8 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// Initialize functions when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Set active sidebar link based on current page
+    // Set active sidebar link
     const currentPage = window.location.pathname.split('/').pop();
     const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
     
@@ -230,4 +215,18 @@ document.addEventListener('DOMContentLoaded', function() {
             link.classList.add('active');
         }
     });
+
+    // Highlight item from notification link
+    if (window.location.hash) {
+        const hash = window.location.hash;
+        try {
+            const targetElement = document.querySelector(hash);
+            if (targetElement) {
+                targetElement.classList.add('highlight-item');
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } catch (e) {
+            console.warn("Could not find element for hash:", hash);
+        }
+    }
 });

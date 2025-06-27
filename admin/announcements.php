@@ -20,10 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 if ($stmt->execute()) {
                     $success_message = "Announcement posted successfully!";
-                    // *** NEW: Notify all tenants about the announcement ***
                     require_once('../includes/notifications.php');
                     $notification_message = "New announcement: '" . substr($title, 0, 30) . "...'";
-                    notify_all_tenants($conn, $notification_message, '../user/index.php');
+                    notify_all_tenants($conn, $notification_message, 'user/index.php'); // Corrected link
                 } else {
                     $error_message = "Failed to post announcement!";
                 }
@@ -122,7 +121,7 @@ include '../includes/header.php';
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                             <h3 style="color: #333; margin: 0; flex: 1;"><?php echo htmlspecialchars($announcement['title']); ?></h3>
                             <div style="display: flex; gap: 0.5rem;">
-                                <button onclick="openEditModal(<?php echo $announcement['id']; ?>, '<?php echo htmlspecialchars($announcement['title']); ?>', '<?php echo htmlspecialchars(str_replace(["\r", "\n"], "\\n", $announcement['content'])); ?>')" class="btn btn-sm btn-secondary">
+                                <button onclick="openEditModal(<?php echo $announcement['id']; ?>, '<?php echo htmlspecialchars(addslashes($announcement['title'])); ?>', '<?php echo htmlspecialchars(addslashes(str_replace(["\r", "\n"], "\\n", $announcement['content']))); ?>')" class="btn btn-sm btn-secondary">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
                                 <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this announcement?')">
@@ -160,7 +159,7 @@ include '../includes/header.php';
     <div class="modal-content">
         <div class="modal-header">
             <h2>Post New Announcement</h2>
-            <span class="close" onclick="closeModal('addAnnouncementModal')">&times;</span>
+            <span class="close" onclick="closeModal('addAnnouncementModal')">×</span>
         </div>
         <form method="POST">
             <input type="hidden" name="action" value="add_announcement">
@@ -188,7 +187,7 @@ include '../includes/header.php';
     <div class="modal-content">
         <div class="modal-header">
             <h2>Edit Announcement</h2>
-            <span class="close" onclick="closeModal('editAnnouncementModal')">&times;</span>
+            <span class="close" onclick="closeModal('editAnnouncementModal')">×</span>
         </div>
         <form method="POST">
             <input type="hidden" name="action" value="edit_announcement">

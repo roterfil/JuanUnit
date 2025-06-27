@@ -17,54 +17,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             if ($stmt->execute()) {
                 $success_message = "Payment marked as paid successfully!";
-                // *** NEW: Notify the tenant ***
                 $tenant_id_query = $conn->prepare("SELECT tenant_id, amount FROM payments WHERE id = ?");
                 $tenant_id_query->bind_param("i", $payment_id);
                 $tenant_id_query->execute();
                 $payment_info = $tenant_id_query->get_result()->fetch_assoc();
                 $tenant_id = $payment_info['tenant_id'];
                 $amount = $payment_info['amount'];
+
                 require_once('../includes/notifications.php');
                 $notification_message = "Your payment of ₱" . number_format($amount, 2) . " has been confirmed.";
                 create_notification($conn, $tenant_id, 'tenant', $notification_message, 'user/payments.php#payment-' . $payment_id);
             } else {
                 $error_message = "Failed to update payment status!";
             }
-        } else        if ($_POST['action'] == 'add_payment') {
+        } elseif ($_POST['action'] == 'add_payment') {
             $unit_id = intval($_POST['unit_id']);
-            $tenant_ids = $_POST['tenant_ids']; // Array of tenant IDs
+            $tenant_ids = $_POST['tenant_ids'] ?? []; // Ensure it's an array
             $amount = floatval($_POST['amount']);
             $due_date = $_POST['due_date'];
             
             $success_count = 0;
             $total_tenants = count($tenant_ids);
             
-            foreach ($tenant_ids as $tenant_id) {
-                $tenant_id = intval($tenant_id);
-                $stmt = $conn->prepare("INSERT INTO payments (tenant_id, amount, due_date) VALUES (?, ?, ?)");
-                $stmt->bind_param("ids", $tenant_id, $amount, $due_date);
-                
-            if ($stmt->execute()) {
-                $new_payment_id = $conn->insert_id; // Get the new payment ID
-                $success_count++;
-
-                // Notify the tenant about the new bill with a specific link
-                require_once('../includes/notifications.php');
-                $formatted_due_date = date('M j, Y', strtotime($due_date));
-                $notification_message = "A new payment of ₱" . number_format($amount, 2) . " is due on " . $formatted_due_date . ".";
-                create_notification($conn, $tenant_id, 'tenant', $notification_message, 'user/payments.php#payment-' . $new_payment_id);
+            if ($total_tenants > 0) {
+                foreach ($tenant_ids as $tenant_id) {
+                    $tenant_id = intval($tenant_id);
+                    $stmt = $conn->prepare("INSERT INTO payments (tenant_id, amount, due_date) VALUES (?, ?, ?)");
+                    $stmt->bind_param("ids", $tenant_id, $amount, $due_date);
+                    
+                    if ($stmt->execute()) {
+                        $new_payment_id = $conn->insert_id;
+                        $success_count++;
+                        
+                        require_once('../includes/notifications.php');
+                        $formatted_due_date = date('M j, Y', strtotime($due_date));
+                        $notification_message = "A new payment of ₱" . number_format($amount, 2) . " is due on " . $formatted_due_date . ".";
+                        create_notification($conn, $tenant_id, 'tenant', $notification_message, 'user/payments.php#payment-' . $new_payment_id);
+                    }
+                }
             }
             
-            if ($success_count == $total_tenants) {
+            if ($success_count == $total_tenants && $total_tenants > 0) {
                 $success_message = "Payment records added successfully for all selected tenants!";
             } elseif ($success_count > 0) {
                 $success_message = "Payment records added for $success_count out of $total_tenants tenants.";
             } else {
-                $error_message = "Failed to add payment records!";
+                $error_message = "Failed to add payment records! Please select tenants.";
             }
         }
     }
-}
 }
 
 // Fetch payment statistics
@@ -238,7 +239,6 @@ include '../includes/header.php';
                             </td>
                             <td>
                                 <?php if ($payment['proof_of_payment']): ?>
-                                    <!-- *** CHANGE #1: Converted link to button for consistency *** -->
                                     <button onclick="openProofModal('../uploads/<?php echo htmlspecialchars($payment['proof_of_payment']); ?>')" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye"></i> View
                                     </button>
@@ -281,7 +281,11 @@ include '../includes/header.php';
                 <label for="unit_id">Select Unit</label>
                 <select id="unit_id" name="unit_id" class="form-control" required onchange="loadUnitDetails()">
                     <option value="">Choose a unit...</option>
-                    <?php while ($unit = $units_result->fetch_assoc()): ?>
+                    <?php
+                    // Reset pointer for this loop
+                    $units_result->data_seek(0);
+                    while ($unit = $units_result->fetch_assoc()): 
+                    ?>
                         <option value="<?php echo $unit['id']; ?>" data-rent="<?php echo $unit['monthly_rent']; ?>">
                             Unit <?php echo htmlspecialchars($unit['unit_number']); ?> - ₱<?php echo number_format($unit['monthly_rent'], 2); ?>/month
                         </option>
@@ -330,7 +334,6 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- *** CHANGE #2: Added the Proof Viewer Modal HTML *** -->
 <div id="proofModal" class="modal modal-lg">
     <div class="modal-content">
         <div class="modal-header">
