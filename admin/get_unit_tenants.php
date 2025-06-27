@@ -1,24 +1,54 @@
 <?php
+// --- START OF DEBUG CODE ---
+// These lines will force PHP to show any hidden errors.
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+// --- END OF DEBUG CODE ---
+
+// Ensure this script returns JSON
+header('Content-Type: application/json');
+
+// Session and Database connection
 include '../includes/session_check_admin.php';
 require_once '../includes/db_connect.php';
 
-header('Content-Type: application/json');
+// Initialize the response array
+$response = ['success' => false, 'tenants' => [], 'message' => 'An unknown error occurred.'];
 
 if (isset($_GET['unit_id'])) {
     $unit_id = intval($_GET['unit_id']);
-    
-    $stmt = $conn->prepare("SELECT id, full_name, email FROM tenants WHERE unit_id = ? ORDER BY full_name");
-    $stmt->bind_param("i", $unit_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    $tenants = [];
-    while ($row = $result->fetch_assoc()) {
-        $tenants[] = $row;
+
+    if ($unit_id > 0) {
+        // Prepare a statement to prevent SQL injection
+        $stmt = $conn->prepare("SELECT id, full_name, email FROM tenants WHERE unit_id = ? ORDER BY full_name");
+        
+        if ($stmt) {
+            $stmt->bind_param("i", $unit_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $tenants = [];
+            while ($row = $result->fetch_assoc()) {
+                $tenants[] = $row;
+            }
+            
+            $response['success'] = true;
+            $response['tenants'] = $tenants;
+            $response['message'] = 'Tenants fetched successfully.';
+            
+            $stmt->close();
+        } else {
+            $response['message'] = 'Failed to prepare the database query: ' . $conn->error;
+        }
+    } else {
+        $response['message'] = 'Invalid Unit ID provided.';
     }
-    
-    echo json_encode(['success' => true, 'tenants' => $tenants]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'No unit ID provided']);
+    $response['message'] = 'No Unit ID provided.';
 }
+
+$conn->close();
+
+// Always output a valid JSON response
+echo json_encode($response);
 ?>

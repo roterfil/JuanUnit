@@ -5,52 +5,106 @@ require_once '../includes/db_connect.php';
 $success_message = '';
 $error_message = '';
 
+// Handle image uploads
+function handle_upload($file) {
+    $upload_dir = '../uploads/units/';
+    if (!file_exists($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
+    }
+    
+    if (isset($file) && $file['error'] == UPLOAD_ERR_OK) {
+        $file_tmp = $file['tmp_name'];
+        $file_name = basename($file['name']);
+        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+        if (!in_array($file_ext, $allowed_extensions)) {
+            return ['error' => 'Only JPG, JPEG, PNG, and GIF files are allowed.'];
+        }
+        
+        $new_filename = 'unit_' . time() . '_' . uniqid() . '.' . $file_ext;
+        $upload_path = $upload_dir . $new_filename;
+        
+        if (move_uploaded_file($file_tmp, $upload_path)) {
+            return ['success' => true, 'path' => $new_filename];
+        } else {
+            return ['error' => 'Failed to upload file.'];
+        }
+    }
+    return ['success' => false]; // No file uploaded or error
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
-        if ($_POST['action'] == 'add_unit') {
+        $action = $_POST['action'];
+
+        if ($action == 'add_unit' || $action == 'edit_unit') {
             $unit_number = htmlspecialchars($_POST['unit_number']);
             $description = htmlspecialchars($_POST['description']);
             $monthly_rent = floatval($_POST['monthly_rent']);
-            
-            // Check if unit number already exists
-            $check_stmt = $conn->prepare("SELECT id FROM units WHERE unit_number = ?");
-            $check_stmt->bind_param("s", $unit_number);
-            $check_stmt->execute();
-            $check_result = $check_stmt->get_result();
-            
-            if ($check_result->num_rows > 0) {
-                $error_message = "Unit number already exists!";
-            } else {
-                $stmt = $conn->prepare("INSERT INTO units (unit_number, description, monthly_rent) VALUES (?, ?, ?)");
-                $stmt->bind_param("ssd", $unit_number, $description, $monthly_rent);
-                
-                if ($stmt->execute()) {
-                    $success_message = "Unit added successfully!";
+            $status = htmlspecialchars($_POST['status']);
+            $image_path = $_POST['existing_image'] ?? null;
+
+            if (isset($_FILES['unit_image']) && $_FILES['unit_image']['error'] == UPLOAD_ERR_OK) {
+                $upload_result = handle_upload($_FILES['unit_image']);
+                if (isset($upload_result['error'])) {
+                    $error_message = $upload_result['error'];
                 } else {
-                    $error_message = "Failed to add unit!";
+                    $image_path = $upload_result['path'];
                 }
             }
-        } elseif ($_POST['action'] == 'update_status') {
+
+            if (!$error_message) {
+                if ($action == 'add_unit') {
+                    $stmt = $conn->prepare("INSERT INTO units (unit_number, description, monthly_rent, status, image_path) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->bind_param("ssdss", $unit_number, $description, $monthly_rent, $status, $image_path);
+                    if ($stmt->execute()) {
+                        $success_message = "Unit added successfully!";
+                    } else {
+                        $error_message = "Failed to add unit: " . $conn->error;
+                    }
+                } elseif ($action == 'edit_unit') {
+                    $unit_id = intval($_POST['unit_id']);
+                    $stmt = $conn->prepare("UPDATE units SET unit_number = ?, description = ?, monthly_rent = ?, status = ?, image_path = ? WHERE id = ?");
+                    $stmt->bind_param("ssdssi", $unit_number, $description, $monthly_rent, $status, $image_path, $unit_id);
+                    if ($stmt->execute()) {
+                        $success_message = "Unit updated successfully!";
+                    } else {
+                        $error_message = "Failed to update unit: " . $conn->error;
+                    }
+                }
+            }
+        } elseif ($action == 'delete_unit') {
             $unit_id = intval($_POST['unit_id']);
-            $status = htmlspecialchars($_POST['status']);
             
-            $stmt = $conn->prepare("UPDATE units SET status = ? WHERE id = ?");
-            $stmt->bind_param("si", $status, $unit_id);
-            
-            if ($stmt->execute()) {
-                $success_message = "Unit status updated successfully!";
+            // Optional: Also delete image file from server
+            $stmt = $conn->prepare("SELECT image_path FROM units WHERE id = ?");
+            $stmt->bind_param("i", $unit_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if($row = $result->fetch_assoc()){
+                if($row['image_path'] && file_exists('../uploads/units/' . $row['image_path'])){
+                    unlink('../uploads/units/' . $row['image_path']);
+                }
+            }
+
+            $delete_stmt = $conn->prepare("DELETE FROM units WHERE id = ?");
+            $delete_stmt->bind_param("i", $unit_id);
+            if ($delete_stmt->execute()) {
+                $success_message = "Unit deleted successfully!";
             } else {
-                $error_message = "Failed to update unit status!";
+                $error_message = "Failed to delete unit. It might be assigned to tenants.";
             }
         }
     }
 }
 
 // Fetch all units
-$units_query = "SELECT u.*, t.full_name as tenant_name 
+$units_query = "SELECT u.*, COUNT(t.id) as tenant_count
                 FROM units u 
                 LEFT JOIN tenants t ON u.id = t.unit_id 
+                GROUP BY u.id
                 ORDER BY u.unit_number";
 $units_result = $conn->query($units_query);
 
@@ -86,57 +140,39 @@ include '../includes/header.php';
         </div>
 
         <?php if ($success_message): ?>
-            <div style="background: #e8f5e8; color: #2e7d32; padding: 1rem; border-radius: 10px; margin-bottom: 2rem;">
-                <?php echo $success_message; ?>
-            </div>
+            <div style="background: #e8f5e8; color: #2e7d32; padding: 1rem; border-radius: 10px; margin-bottom: 2rem;"><?php echo $success_message; ?></div>
         <?php endif; ?>
-
         <?php if ($error_message): ?>
-            <div style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 10px; margin-bottom: 2rem;">
-                <?php echo $error_message; ?>
-            </div>
+            <div style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 10px; margin-bottom: 2rem;"><?php echo $error_message; ?></div>
         <?php endif; ?>
 
-        <!-- Add Unit Button -->
         <div style="margin-bottom: 2rem;">
-            <button onclick="openModal('addUnitModal')" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add New Unit
-            </button>
+            <button onclick="openModal('addUnitModal')" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Unit</button>
         </div>
 
-        <!-- Units Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem;">
+        <div class="unit-grid">
             <?php while ($unit = $units_result->fetch_assoc()): ?>
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <h3 style="color: #333;">Unit <?php echo htmlspecialchars($unit['unit_number']); ?></h3>
-                        <span class="badge badge-<?php echo $unit['status'] == 'Available' ? 'success' : ($unit['status'] == 'Occupied' ? 'primary' : 'warning'); ?>">
-                            <?php echo $unit['status']; ?>
-                        </span>
+                <div class="unit-card">
+                    <div class="unit-card-image">
+                        <img src="<?php echo $unit['image_path'] ? '../uploads/units/' . htmlspecialchars($unit['image_path']) : 'https://via.placeholder.com/400x250/dee2e6/6c757d.png?text=No+Image'; ?>" alt="Unit <?php echo htmlspecialchars($unit['unit_number']); ?>">
+                        <div class="unit-card-status badge badge-<?php echo $unit['status'] == 'Available' ? 'success' : ($unit['status'] == 'Occupied' ? 'primary' : 'warning'); ?>">
+                            <?php echo htmlspecialchars($unit['status']); ?>
+                        </div>
                     </div>
-                    
-                    <p style="color: #666; margin-bottom: 1rem;"><?php echo htmlspecialchars($unit['description']); ?></p>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <strong style="color: #667eea;">₱<?php echo number_format($unit['monthly_rent'], 2); ?></strong>
-                        <span style="color: #666;"> / month</span>
+                    <div class="unit-card-content">
+                        <h3 class="unit-card-title">Unit <?php echo htmlspecialchars($unit['unit_number']); ?></h3>
+                        <p class="unit-card-description"><?php echo htmlspecialchars($unit['description']); ?></p>
+                        <div class="unit-card-details">
+                            <span><i class="fas fa-money-bill-wave"></i> ₱<?php echo number_format($unit['monthly_rent'], 2); ?>/mo</span>
+                            <span><i class="fas fa-users"></i> <?php echo $unit['tenant_count']; ?> Tenant(s)</span>
+                        </div>
                     </div>
-                    
-                    <?php if ($unit['tenant_name']): ?>
-                        <p style="color: #333; margin-bottom: 1rem;">
-                            <i class="fas fa-user"></i> <strong>Tenant:</strong> <?php echo htmlspecialchars($unit['tenant_name']); ?>
-                        </p>
-                    <?php endif; ?>
-                    
-                    <div style="display: flex; gap: 0.5rem;">
-                        <form method="POST" style="flex: 1;">
-                            <input type="hidden" name="action" value="update_status">
+                    <div class="unit-card-actions">
+                        <button onclick="openEditUnitModal(<?php echo $unit['id']; ?>)" class="btn btn-sm btn-secondary"><i class="fas fa-edit"></i> Edit</button>
+                        <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this unit? This cannot be undone.')">
+                            <input type="hidden" name="action" value="delete_unit">
                             <input type="hidden" name="unit_id" value="<?php echo $unit['id']; ?>">
-                            <select name="status" onchange="this.form.submit()" class="form-control" style="font-size: 14px;">
-                                <option value="Available" <?php echo $unit['status'] == 'Available' ? 'selected' : ''; ?>>Available</option>
-                                <option value="Occupied" <?php echo $unit['status'] == 'Occupied' ? 'selected' : ''; ?>>Occupied</option>
-                                <option value="Under Maintenance" <?php echo $unit['status'] == 'Under Maintenance' ? 'selected' : ''; ?>>Under Maintenance</option>
-                            </select>
+                            <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Delete</button>
                         </form>
                     </div>
                 </div>
@@ -145,34 +181,81 @@ include '../includes/header.php';
     </div>
 </div>
 
+<!-- Add/Edit Unit Modals -->
 <!-- Add Unit Modal -->
 <div id="addUnitModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
             <h2>Add New Unit</h2>
-            <span class="close" onclick="closeModal('addUnitModal')">&times;</span>
+            <span class="close" onclick="closeModal('addUnitModal')">×</span>
         </div>
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="action" value="add_unit">
-            
             <div class="form-group">
-                <label for="unit_number">Unit Number</label>
-                <input type="text" id="unit_number" name="unit_number" class="form-control" required>
+                <label>Unit Number</label><input type="text" name="unit_number" class="form-control" required>
             </div>
-            
             <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" class="form-control" rows="3" required></textarea>
+                <label>Description</label><textarea name="description" class="form-control" rows="3" required></textarea>
             </div>
-            
             <div class="form-group">
-                <label for="monthly_rent">Monthly Rent (₱)</label>
-                <input type="number" id="monthly_rent" name="monthly_rent" class="form-control" step="0.01" min="0" required>
+                <label>Monthly Rent (₱)</label><input type="number" name="monthly_rent" class="form-control" step="0.01" min="0" required>
             </div>
-            
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status" class="form-control" required>
+                    <option value="Available">Available</option>
+                    <option value="Occupied">Occupied</option>
+                    <option value="Under Maintenance">Under Maintenance</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Unit Image</label><input type="file" name="unit_image" class="form-control" accept="image/*">
+            </div>
             <div style="display: flex; gap: 1rem; justify-content: flex-end;">
                 <button type="button" onclick="closeModal('addUnitModal')" class="btn btn-secondary">Cancel</button>
                 <button type="submit" class="btn btn-primary">Add Unit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Unit Modal -->
+<div id="editUnitModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Unit</h2>
+            <span class="close" onclick="closeModal('editUnitModal')">×</span>
+        </div>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="action" value="edit_unit">
+            <input type="hidden" name="unit_id" id="edit_unit_id">
+            <input type="hidden" name="existing_image" id="edit_existing_image">
+            <div class="form-group">
+                <label>Unit Number</label><input type="text" id="edit_unit_number" name="unit_number" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label><textarea id="edit_description" name="description" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Monthly Rent (₱)</label><input type="number" id="edit_monthly_rent" name="monthly_rent" class="form-control" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="edit_status" name="status" class="form-control" required>
+                    <option value="Available">Available</option>
+                    <option value="Occupied">Occupied</option>
+                    <option value="Under Maintenance">Under Maintenance</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Unit Image</label>
+                <img id="edit_image_preview" src="" alt="Current Image" style="max-width: 100px; max-height: 100px; display: block; margin-bottom: 10px;">
+                <input type="file" name="unit_image" class="form-control" accept="image/*">
+                <small>Leave blank to keep the current image.</small>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" onclick="closeModal('editUnitModal')" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Unit</button>
             </div>
         </form>
     </div>

@@ -1,175 +1,167 @@
 <?php
-$page_title = "Home";
-$css_path = "css/style.css";
+$page_title = "Welcome to JuanUnit";
+$css_path = "css/style.css"; // THIS IS THE CRITICAL LINE
 $js_path = "js/script.js";
-include 'includes/header.php';
+include 'includes/header.php'; 
 ?>
 
-<!-- Navigation -->
-<nav class="navbar">
-    <div class="nav-container">
-        <a href="#" class="logo">JuanUnit</a>
-        <ul class="nav-links">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#about">About Us</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
-        <a href="login.php" class="btn btn-primary">Login / Sign up</a>
-    </div>
-</nav>
+<div class="lp-v2-page-wrapper">
+    <!-- Landing Page Navigation v2 -->
+    <nav class="lp-v2-nav">
+        <div class="lp-v2-container">
+            <a href="index.php" class="lp-v2-logo">JuanUnit</a>
+            <div class="lp-v2-nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="login.php" class="lp-v2-btn-nav">Get Started</a>
+            </div>
+        </div>
+    </nav>
 
-<!-- Hero Section -->
-<section class="hero">
-    <div class="hero-content">
-        <div class="hero-text">
-            <h1>Unit Management for EveryJuan</h1>
-            <p>Streamline your dormitory management with our comprehensive platform. Handle payments, maintenance requests, and tenant communications all in one place.</p>
-            <div class="hero-buttons">
-                <a href="register.php" class="btn btn-primary">Get Started</a>
-                <a href="#contact" class="btn btn-secondary">Contact Us</a>
+    <!-- Hero Section v2 -->
+    <section class="lp-v2-hero">
+        <div class="lp-v2-container lp-v2-hero-content">
+            <div class="lp-v2-hero-text">
+                <span class="lp-v2-badge">Next-Generation Property Management</span>
+                <h1>The Future of Unit Management is Here.</h1>
+                <p>Simplify operations, empower tenants, and grow your rental business with one intuitive platform.</p>
+                <a href="register.php" class="lp-v2-btn-primary">Create Your Account <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="lp-v2-hero-visual">
+                <img src="https://assets.website-files.com/62e8f5c9dbfdcc62e8d287db/62e8f5cadbfdcca41bd28825_hero-3d-character.png" alt="3D illustration of a character managing tasks on a laptop">
+                 <!-- Floating icons -->
+                <i class="fas fa-dollar-sign lp-v2-float-icon" style="top: 20%; left: -10%;"></i>
+                <i class="fas fa-key lp-v2-float-icon" style="top: 30%; right: -5%;"></i>
+                <i class="fas fa-bell lp-v2-float-icon" style="bottom: 15%; left: 0;"></i>
             </div>
         </div>
-        <div class="hero-visual">
-            <!-- Placeholder for hero illustration -->
-            <div style="width: 100%; height: 400px; background: rgba(255,255,255,0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
-                <i class="fas fa-building" style="font-size: 120px; opacity: 0.3;"></i>
-            </div>
-        </div>
-    </div>
-</section>
+    </section>
 
-<!-- Features Section -->
-<section id="features" class="section">
-    <div class="container">
-        <div class="section-header">
-            <h2>Feel The Power Of Technology</h2>
-            <p>Experience seamless dormitory management with our innovative features designed for modern living.</p>
-        </div>
-        <div class="features-grid">
-            <div class="card">
-                <div class="card-icon">
-                    <i class="fas fa-credit-card"></i>
-                </div>
-                <h3>Effortless Payments</h3>
-                <p>Upload payment proofs instantly and track your payment history with ease. Never miss a due date again.</p>
+    <!-- Features Section v2 -->
+    <section id="features" class="lp-v2-section">
+        <div class="lp-v2-container">
+            <div class="lp-v2-section-header">
+                <h2>Why is JuanUnit Better?</h2>
+                <p>We built a system that works for landlords and tenants alike.</p>
             </div>
-            <div class="card">
-                <div class="card-icon">
-                    <i class="fas fa-bullhorn"></i>
+            <div class="lp-v2-features-grid">
+                <!-- Feature Card 1 -->
+                <div class="lp-v2-feature-card">
+                    <div class="lp-v2-card-icon" style="background-color: #e8f0fe;">
+                        <i class="fas fa-sitemap" style="color: #4285f4;"></i>
+                    </div>
+                    <h3>Centralized Dashboard</h3>
+                    <p>Oversee every unit, payment, and request from one powerful admin panel.</p>
                 </div>
-                <h3>Instant Announcements</h3>
-                <p>Stay updated with important announcements from management. Get notified about events, maintenance, and more.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">
-                    <i class="fas fa-tools"></i>
+                <!-- Feature Card 2 -->
+                <div class="lp-v2-feature-card">
+                    <div class="lp-v2-card-icon" style="background-color: #e6f7ee;">
+                        <i class="fas fa-mobile-alt" style="color: #34a853;"></i>
+                    </div>
+                    <h3>Tenant Self-Service</h3>
+                    <p>Empower tenants to pay rent, upload proofs, and report issues online.</p>
                 </div>
-                <h3>Quick Maintenance Reporting</h3>
-                <p>Report maintenance issues quickly and track their progress in real-time. Efficient problem resolution guaranteed.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">
-                    <i class="fas fa-shield-alt"></i>
+                <!-- Feature Card 3 -->
+                <div class="lp-v2-feature-card">
+                    <div class="lp-v2-card-icon" style="background-color: #fff8e6;">
+                        <i class="fas fa-bell" style="color: #fbbc05;"></i>
+                    </div>
+                    <h3>Automated Notifications</h3>
+                    <p>Reduce manual work with automated alerts for due dates and new announcements.</p>
                 </div>
-                <h3>Secure & Reliable</h3>
-                <p>Your data is protected with enterprise-grade security. Reliable system with 99.9% uptime guarantee.</p>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- About Section -->
-<section id="about" class="section" style="background: white;">
-    <div class="container">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;">
-            <div>
-                <h4 style="color: #667eea; font-weight: 600; margin-bottom: 1rem;">ABOUT US</h4>
-                <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 2rem; color: #333;">We're Best In Software Development</h2>
-                <p style="color: #666; margin-bottom: 2rem; line-height: 1.8;">Scale your software operations through a custom engineering team. Meet the demand of your company's expectations with a high-performing operations team skilled in the top technologies you need.</p>
-                <a href="#contact" class="btn btn-primary">Learn About Us</a>
+    <!-- How It Works Section v2 -->
+    <section id="how-it-works" class="lp-v2-section lp-v2-how-it-works">
+        <div class="lp-v2-container">
+            <div class="lp-v2-section-header">
+                <h2>Get Started in Minutes</h2>
+                <p>Our simple onboarding process gets you up and running fast.</p>
             </div>
-            <div style="text-align: center;">
-                <!-- Placeholder for about illustration -->
-                <div style="width: 100%; height: 300px; background: #f8f9ff; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: #667eea;">
-                    <i class="fas fa-users" style="font-size: 80px; opacity: 0.3;"></i>
+            <div class="lp-v2-timeline">
+                <!-- Step 1 -->
+                <div class="lp-v2-timeline-item">
+                    <div class="lp-v2-timeline-text">
+                        <span class="lp-v2-timeline-step">01</span>
+                        <h3>Create Your Property</h3>
+                        <p>Sign up as an administrator and add your first units. Set rent, descriptions, and upload photos in minutes.</p>
+                    </div>
+                    <div class="lp-v2-timeline-visual">
+                        <img src="https://assets.website-files.com/62e8f5c9dbfdcc62e8d287db/62e8f5cadbfdcca838d2882a_features-3d-character-3.png" alt="3D illustration of a person building with blocks">
+                    </div>
+                </div>
+                <!-- Step 2 -->
+                <div class="lp-v2-timeline-item">
+                    <div class="lp-v2-timeline-text">
+                        <span class="lp-v2-timeline-step">02</span>
+                        <h3>Invite Your Tenants</h3>
+                        <p>Tenants can register themselves, or you can assign them to units directly. They get instant access to their personal portal.</p>
+                    </div>
+                    <div class="lp-v2-timeline-visual">
+                         <img src="https://assets.website-files.com/62e8f5c9dbfdcc62e8d287db/62e8f5cadbfdcc1043d28829_features-3d-character-2.png" alt="3D illustration of a person sending a message">
+                    </div>
+                </div>
+                <!-- Step 3 -->
+                <div class="lp-v2-timeline-item">
+                    <div class="lp-v2-timeline-text">
+                        <span class="lp-v2-timeline-step">03</span>
+                        <h3>Automate & Relax</h3>
+                        <p>Let JuanUnit handle payment tracking, maintenance tickets, and announcements. Focus on growing your business.</p>
+                    </div>
+                    <div class="lp-v2-timeline-visual">
+                         <img src="https://assets.website-files.com/62e8f5c9dbfdcc62e8d287db/62e8f5cadbfdcc72f2d28828_features-3d-character-1.png" alt="3D illustration of a person relaxing with automated tasks in the background">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Additional Features Section -->
-<section class="section">
-    <div class="container">
-        <div class="section-header">
-            <h4 style="color: #667eea; font-weight: 600; margin-bottom: 1rem;">FEATURES</h4>
-            <h2>We Provide Exciting Features</h2>
-        </div>
-        <div class="features-grid">
-            <div class="card">
-                <div class="card-icon">
-                    <i class="fas fa-mobile-alt"></i>
+    <!-- Call to Action Section v2 -->
+    <section class="lp-v2-section lp-v2-cta">
+        <div class="lp-v2-container">
+            <div class="lp-v2-cta-content">
+                <div class="lp-v2-cta-visual">
+                    <img src="https://assets.website-files.com/62e8f5c9dbfdcc62e8d287db/62e8f5cadbfdcc249ad2882c_cta-3d-character.png" alt="3D Paper airplane">
                 </div>
-                <h3>Mobile Responsive</h3>
-                <p>Access your account from any device. Our platform works seamlessly on desktop, tablet, and mobile devices.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <h3>Analytics Dashboard</h3>
-                <p>Get insights into payment trends, occupancy rates, and maintenance patterns with comprehensive analytics.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">
-                    <i class="fas fa-headset"></i>
-                </div>
-                <h3>24/7 Support</h3>
-                <p>Our dedicated support team is available round the clock to assist you with any questions or concerns.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">
-                    <i class="fas fa-cog"></i>
-                </div>
-                <h3>Easy Management</h3>
-                <p>Intuitive interface makes it easy for administrators to manage units, tenants, and all dormitory operations.</p>
+                <h2>Ready to Transform Your Rental Management?</h2>
+                <p>Join dozens of other property managers who trust JuanUnit.</p>
+                <a href="register.php" class="lp-v2-btn-primary">Sign Up For Free</a>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Contact Section -->
-<section id="contact" class="section" style="background: white;">
-    <div class="container">
-        <div class="section-header">
-            <h2>Get In Touch</h2>
-            <p>Ready to transform your dormitory management? Contact us today to get started.</p>
+    <!-- Footer v2 -->
+    <footer class="lp-v2-footer">
+        <div class="lp-v2-container">
+            <div class="lp-v2-footer-content">
+                <div class="lp-v2-footer-col">
+                    <h3 class="lp-v2-logo">JuanUnit</h3>
+                    <p>The modern solution for dormitory and apartment management.</p>
+                </div>
+                <div class="lp-v2-footer-col">
+                    <h4>Navigate</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="login.php">Login</a></li>
+                        <li><a href="register.php">Register</a></li>
+                    </ul>
+                </div>
+                <div class="lp-v2-footer-col">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="lp-v2-footer-bottom">
+                <p>© <?php echo date('Y'); ?> JuanUnit. All rights reserved.</p>
+            </div>
         </div>
-        <div style="max-width: 600px; margin: 0 auto;">
-            <form class="form-container">
-                <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="message">Message</label>
-                    <textarea id="message" class="form-control" rows="5" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
-            </form>
-        </div>
-    </div>
-</section>
-
-<!-- Footer -->
-<footer style="background: #333; color: white; text-align: center; padding: 2rem 0;">
-    <div class="container">
-        <p>&copy; 2024 JuanUnit. All rights reserved. Built with ❤️ for better dormitory management.</p>
-    </div>
-</footer>
+    </footer>
+</div>
 
 <?php include 'includes/footer.php'; ?>

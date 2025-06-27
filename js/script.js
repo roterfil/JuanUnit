@@ -1,15 +1,23 @@
-// JuanUnit JavaScript Functions
+/* --- JuanUnit Complete JavaScript File (Definitive Version) --- */
 
-// Modal functionality
+
+// --- 1. MODAL FUNCTIONS ---
+// This is the corrected function that enables centered modals.
 function openModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex'; // Use 'flex' for centering
+    }
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
-// Close modal when clicking outside of it
+// Close modal when clicking on the background overlay
 window.onclick = function(event) {
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
@@ -17,7 +25,111 @@ window.onclick = function(event) {
             modal.style.display = 'none';
         }
     });
+};
+
+
+// --- 2. ADMIN-SIDE DYNAMIC FUNCTIONS ---
+
+// Function to open and populate the "Edit Unit" modal
+function openEditUnitModal(unitId) {
+    fetch(`get_unit_data.php?id=${unitId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const unit = data.unit;
+                document.getElementById('edit_unit_id').value = unit.id;
+                document.getElementById('edit_unit_number').value = unit.unit_number;
+                document.getElementById('edit_description').value = unit.description;
+                document.getElementById('edit_monthly_rent').value = unit.monthly_rent;
+                document.getElementById('edit_status').value = unit.status;
+                document.getElementById('edit_existing_image').value = unit.image_path;
+                
+                const imagePreview = document.getElementById('edit_image_preview');
+                if (unit.image_path) {
+                    imagePreview.src = '../uploads/units/' + unit.image_path;
+                    imagePreview.style.display = 'block';
+                } else {
+                    imagePreview.style.display = 'none';
+                }
+
+                openModal('editUnitModal');
+            } else {
+                alert('Error fetching unit data: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while fetching unit data.');
+        });
 }
+
+// Function to load tenants in the "Add Payment" modal
+function loadUnitDetails() {
+    const unitSelect = document.getElementById('unit_id');
+    const unitDetails = document.getElementById('unit-details');
+    const tenantsListDiv = document.getElementById('tenants-list');
+    const amountInput = document.getElementById('amount');
+    const useRentBtn = document.getElementById('useUnitRentBtn');
+    
+    const unitId = unitSelect.value;
+    
+    if (unitId) {
+        const selectedOption = unitSelect.options[unitSelect.selectedIndex];
+        const rent = selectedOption.getAttribute('data-rent');
+        
+        // Show loading state and pre-fill data
+        tenantsListDiv.innerHTML = '<p class="tenant-placeholder">Loading tenants...</p>';
+        unitDetails.style.display = 'block';
+        amountInput.value = rent;
+        useRentBtn.style.display = 'inline-block';
+
+        // Fetch tenants for this unit
+        fetch(`get_unit_tenants.php?unit_id=${unitId}`)
+            .then(response => response.json())
+            .then(data => {
+                let tenantsHtml = '';
+                if (data.success && data.tenants.length > 0) {
+                    data.tenants.forEach(tenant => {
+                        tenantsHtml += `
+                            <label class="tenant-checkbox">
+                                <input type="checkbox" name="tenant_ids[]" value="${tenant.id}" checked>
+                                <span>${tenant.full_name}</span>
+                            </label>
+                        `;
+                    });
+                } else {
+                    tenantsHtml = '<p class="tenant-placeholder">No tenants are currently assigned to this unit.</p>';
+                }
+                tenantsListDiv.innerHTML = tenantsHtml;
+            })
+            .catch(error => {
+                console.error('Error fetching tenants:', error);
+                tenantsListDiv.innerHTML = '<p class="tenant-placeholder" style="color: #c62828;">An error occurred while loading tenants.</p>';
+            });
+    } else {
+        // Hide details if no unit is selected
+        unitDetails.style.display = 'none';
+        useRentBtn.style.display = 'none';
+        amountInput.value = '';
+    }
+}
+
+// Function to use the unit's rent amount in the payment form
+function useUnitRent() {
+    const unitSelect = document.getElementById('unit_id');
+    const amountInput = document.getElementById('amount');
+    
+    if (unitSelect.value) {
+        const selectedOption = unitSelect.options[unitSelect.selectedIndex];
+        const rent = selectedOption.getAttribute('data-rent');
+        amountInput.value = rent;
+    } else {
+        alert('Please select a unit first.');
+    }
+}
+
+
+// --- 3. ORIGINAL HELPER FUNCTIONS ---
 
 // Form validation
 function validateForm(formId) {
@@ -71,88 +183,34 @@ function togglePassword(inputId, iconId) {
     }
 }
 
-// Auto-hide alert messages
-document.addEventListener('DOMContentLoaded', function() {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.opacity = '0';
-            setTimeout(() => {
-                alert.remove();
-            }, 300);
-        }, 5000);
-    });
-});
-
-// Sidebar toggle for mobile
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('mobile-open');
-}
-
-// Search functionality
+// Simple search for tables
 function searchTable(inputId, tableId) {
     const input = document.getElementById(inputId);
     const table = document.getElementById(tableId);
     const filter = input.value.toUpperCase();
     const rows = table.getElementsByTagName('tr');
 
-    for (let i = 1; i < rows.length; i++) {
+    for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header row
         const cells = rows[i].getElementsByTagName('td');
         let found = false;
-        
         for (let j = 0; j < cells.length; j++) {
-            if (cells[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            if (cells[j].textContent.toUpperCase().indexOf(filter) > -1) {
                 found = true;
                 break;
             }
         }
-        
-        rows[i].style.display = found ? '' : 'none';
+        rows[i].style.display = found ? "" : "none";
     }
 }
 
-// AJAX functions for dynamic updates
-function updateStatus(type, id, status, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'update_status.php', true);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            const response = JSON.parse(xhr.responseText);
-            if (callback) callback(response);
-        }
-    };
-    
-    xhr.send(`type=${type}&id=${id}&status=${status}`);
-}
-
-// Format currency
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-PH', {
-        style: 'currency',
-        currency: 'PHP'
-    }).format(amount);
-}
-
-// Format date
-function formatDate(dateString) {
-    const options = { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    };
-    return new Date(dateString).toLocaleDateString('en-PH', options);
-}
-
-// Smooth scrolling for anchor links
+// Smooth scrolling for anchor links on the landing page
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+            e.preventDefault();
+            targetElement.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start'
             });
@@ -160,35 +218,9 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// Form submission with loading state
-function submitFormWithLoading(formId, buttonId) {
-    const form = document.getElementById(formId);
-    const button = document.getElementById(buttonId);
-    
-    if (validateForm(formId)) {
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        button.disabled = true;
-        form.submit();
-    }
-}
-
-// Dashboard chart initialization (if needed)
-function initializeCharts() {
-    // Placeholder for chart initialization
-    // Can be extended with Chart.js or other charting libraries
-}
-
-// Real-time notifications (placeholder for future implementation)
-function checkNotifications() {
-    // Placeholder for notification checking
-    // Can be implemented with WebSocket or periodic AJAX calls
-}
-
-// Initialize all functions when DOM is loaded
+// Initialize functions when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    initializeCharts();
-    
-    // Set active sidebar link
+    // Set active sidebar link based on current page
     const currentPage = window.location.pathname.split('/').pop();
     const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
     
