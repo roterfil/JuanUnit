@@ -8,8 +8,15 @@ ini_set('display_errors', 1);
 // Ensure this script returns JSON
 header('Content-Type: application/json');
 
-// Session and Database connection
-include '../includes/session_check_admin.php';
+// --- START: Manual Session Check for AJAX ---
+session_start();
+if (!isset($_SESSION['admin_id'])) {
+    // If session is not valid, send a JSON error response and stop.
+    echo json_encode(['success' => false, 'message' => 'Authentication required.', 'reason' => 'auth']);
+    exit();
+}
+// --- END: Manual Session Check for AJAX ---
+
 require_once '../includes/db_connect.php';
 
 // Initialize the response array

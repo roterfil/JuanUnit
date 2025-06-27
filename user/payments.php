@@ -41,7 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                 
                 if ($stmt->execute()) {
                     $success_message = "Proof of payment uploaded successfully!";
-                } else {
+                    // *** NEW: Notify all admins ***
+                    require_once('../includes/notifications.php');
+                    $notification_message = "Tenant " . $_SESSION['tenant_name'] . " uploaded a payment proof.";
+                    notify_all_admins($conn, $notification_message, 'admin/payments.php#payment-' . $payment_id);                } else {
                     $error_message = "Failed to update payment record!";
                     unlink($upload_path); // Delete uploaded file on database error
                 }
@@ -163,7 +166,7 @@ include '../includes/header.php';
                         </thead>
                         <tbody>
                             <?php while ($payment = $payments_result->fetch_assoc()): ?>
-                                <tr style="<?php echo ($payment['status'] == 'Unpaid' && $payment['due_date'] < date('Y-m-d')) ? 'background-color: #fff5f5;' : ''; ?>">
+                                <tr  id="payment-<?php echo $payment['id']; ?>" style="<?php echo ($payment['status'] == 'Unpaid' && $payment['due_date'] < date('Y-m-d')) ? 'background-color: #fff5f5;' : ''; ?>">
                                     <td><strong>₱<?php echo number_format($payment['amount'], 2); ?></strong></td>
                                     <td>
                                         <?php 
@@ -189,9 +192,10 @@ include '../includes/header.php';
                                     </td>
                                     <td>
                                         <?php if ($payment['proof_of_payment']): ?>
-                                            <a href="../uploads/<?php echo htmlspecialchars($payment['proof_of_payment']); ?>" target="_blank" class="btn btn-sm btn-primary">
+                                            <!-- *** CHANGE HERE: Converted link to button with onclick event *** -->
+                                            <button onclick="openProofModal('../uploads/<?php echo htmlspecialchars($payment['proof_of_payment']); ?>')" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-eye"></i> View
-                                            </a>
+                                            </button>
                                         <?php else: ?>
                                             <span style="color: #999;">No proof</span>
                                         <?php endif; ?>
@@ -226,7 +230,7 @@ include '../includes/header.php';
     <div class="modal-content">
         <div class="modal-header">
             <h2>Upload Proof of Payment</h2>
-            <span class="close" onclick="closeModal('uploadProofModal')">&times;</span>
+            <span class="close" onclick="closeModal('uploadProofModal')">×</span>
         </div>
         
         <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f8f9ff; border-radius: 10px;">
@@ -261,6 +265,19 @@ include '../includes/header.php';
                 <button type="submit" class="btn btn-primary">Upload Proof</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- *** NEW: Proof Viewer Modal *** -->
+<div id="proofModal" class="modal modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>View Proof of Payment</h2>
+            <span class="close" onclick="closeModal('proofModal')">×</span>
+        </div>
+        <div id="proofContent" style="padding: 1rem 0;">
+            <!-- Proof will be loaded here by JavaScript -->
+        </div>
     </div>
 </div>
 

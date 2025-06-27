@@ -2,11 +2,10 @@
 
 
 // --- 1. MODAL FUNCTIONS ---
-// This is the corrected function that enables centered modals.
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.style.display = 'flex'; // Use 'flex' for centering
+        modal.style.display = 'flex';
     }
 }
 
@@ -17,7 +16,6 @@ function closeModal(modalId) {
     }
 }
 
-// Close modal when clicking on the background overlay
 window.onclick = function(event) {
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
@@ -26,6 +24,28 @@ window.onclick = function(event) {
         }
     });
 };
+
+// *** NEW: Function to open the proof viewer modal ***
+function openProofModal(filePath) {
+    const proofContent = document.getElementById('proofContent');
+    if (!proofContent) {
+        console.error('Proof content container not found!');
+        return;
+    }
+
+    // Check file extension to determine how to display it
+    const isPdf = filePath.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+        // Embed PDF for viewing within the modal
+        proofContent.innerHTML = `<embed src="${filePath}" type="application/pdf" width="100%" height="600px" />`;
+    } else {
+        // Display as an image
+        proofContent.innerHTML = `<img src="${filePath}" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" alt="Proof of Payment">`;
+    }
+
+    openModal('proofModal');
+}
 
 
 // --- 2. ADMIN-SIDE DYNAMIC FUNCTIONS ---
@@ -67,50 +87,69 @@ function openEditUnitModal(unitId) {
 function loadUnitDetails() {
     const unitSelect = document.getElementById('unit_id');
     const unitDetails = document.getElementById('unit-details');
-    const tenantsListDiv = document.getElementById('tenants-list');
+    const unitRent = document.getElementById('unit-rent');
+    const tenantCount = document.getElementById('tenant-count');
+    const tenantsList = document.getElementById('tenants-list');
     const amountInput = document.getElementById('amount');
     const useRentBtn = document.getElementById('useUnitRentBtn');
-    
+
+    if (!unitSelect || !unitDetails || !unitRent || !tenantCount || !tenantsList || !amountInput) {
+        console.error("One or more required modal elements are missing from the DOM.");
+        return;
+    }
+
     const unitId = unitSelect.value;
     
     if (unitId) {
         const selectedOption = unitSelect.options[unitSelect.selectedIndex];
         const rent = selectedOption.getAttribute('data-rent');
         
-        // Show loading state and pre-fill data
-        tenantsListDiv.innerHTML = '<p class="tenant-placeholder">Loading tenants...</p>';
+        unitRent.textContent = '₱' + parseFloat(rent).toLocaleString('en-US', {minimumFractionDigits: 2});
+        tenantsList.innerHTML = '<p style="color: #666;">Loading tenants...</p>';
         unitDetails.style.display = 'block';
         amountInput.value = rent;
-        useRentBtn.style.display = 'inline-block';
-
-        // Fetch tenants for this unit
+        if (useRentBtn) useRentBtn.style.display = 'inline-block';
+        
         fetch(`get_unit_tenants.php?unit_id=${unitId}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`Network response was not ok, status: ${response.status}`);
+                return response.json();
+            })
             .then(data => {
-                let tenantsHtml = '';
-                if (data.success && data.tenants.length > 0) {
-                    data.tenants.forEach(tenant => {
-                        tenantsHtml += `
-                            <label class="tenant-checkbox">
-                                <input type="checkbox" name="tenant_ids[]" value="${tenant.id}" checked>
-                                <span>${tenant.full_name}</span>
-                            </label>
-                        `;
-                    });
-                } else {
-                    tenantsHtml = '<p class="tenant-placeholder">No tenants are currently assigned to this unit.</p>';
+                if (data.success === false && data.reason === 'auth') {
+                    alert('Your session has expired. Please log in again.');
+                    window.location.href = '../login.php';
+                    return;
                 }
-                tenantsListDiv.innerHTML = tenantsHtml;
+
+                if (data.success) {
+                    tenantCount.textContent = data.tenants.length + ' tenant(s)';
+                    let tenantsHtml = '';
+                    if (data.tenants.length > 0) {
+                        data.tenants.forEach(tenant => {
+                            tenantsHtml += `
+                                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" name="tenant_ids[]" value="${tenant.id}" checked>
+                                    <span>${tenant.full_name}</span>
+                                    <small style="color: #666;">(${tenant.email})</small>
+                                </label>
+                            `;
+                        });
+                    } else {
+                        tenantsHtml = '<p style="color: #666; margin: 0;">No tenants assigned to this unit</p>';
+                    }
+                    tenantsList.innerHTML = tenantsHtml;
+                } else {
+                    tenantsList.innerHTML = `<p style="color: #c62828;">Error: ${data.message}</p>`;
+                }
             })
             .catch(error => {
                 console.error('Error fetching tenants:', error);
-                tenantsListDiv.innerHTML = '<p class="tenant-placeholder" style="color: #c62828;">An error occurred while loading tenants.</p>';
+                tenantsList.innerHTML = '<p style="color: #ff6b6b;">Failed to load tenants. See console for details.</p>';
             });
     } else {
-        // Hide details if no unit is selected
         unitDetails.style.display = 'none';
-        useRentBtn.style.display = 'none';
-        amountInput.value = '';
+        if (useRentBtn) useRentBtn.style.display = 'none';
     }
 }
 
@@ -119,55 +158,17 @@ function useUnitRent() {
     const unitSelect = document.getElementById('unit_id');
     const amountInput = document.getElementById('amount');
     
-    if (unitSelect.value) {
+    if (unitSelect && unitSelect.value) {
         const selectedOption = unitSelect.options[unitSelect.selectedIndex];
         const rent = selectedOption.getAttribute('data-rent');
-        amountInput.value = rent;
+        if(amountInput) amountInput.value = rent;
     } else {
         alert('Please select a unit first.');
     }
 }
 
 
-// --- 3. ORIGINAL HELPER FUNCTIONS ---
-
-// Form validation
-function validateForm(formId) {
-    const form = document.getElementById(formId);
-    const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
-    let isValid = true;
-
-    inputs.forEach(input => {
-        if (!input.value.trim()) {
-            input.style.borderColor = '#ff6b6b';
-            isValid = false;
-        } else {
-            input.style.borderColor = '#e1e5e9';
-        }
-    });
-
-    return isValid;
-}
-
-// File upload preview
-function previewFile(input, previewId) {
-    const file = input.files[0];
-    const preview = document.getElementById(previewId);
-    
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
-    }
-}
-
-// Confirm delete action
-function confirmDelete(message = 'Are you sure you want to delete this item?') {
-    return confirm(message);
-}
+// --- 3. HELPER FUNCTIONS ---
 
 // Show/hide password
 function togglePassword(inputId, iconId) {
@@ -190,7 +191,7 @@ function searchTable(inputId, tableId) {
     const filter = input.value.toUpperCase();
     const rows = table.getElementsByTagName('tr');
 
-    for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header row
+    for (let i = 1; i < rows.length; i++) {
         const cells = rows[i].getElementsByTagName('td');
         let found = false;
         for (let j = 0; j < cells.length; j++) {

@@ -16,6 +16,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($stmt->execute()) {
             $success_message = "Maintenance request status updated successfully!";
+            
+            // Notify the tenant
+            $req_info_query = $conn->prepare("SELECT tenant_id, subject FROM maintenance_requests WHERE id = ?");
+            $req_info_query->bind_param("i", $request_id);
+            $req_info_query->execute();
+            $request_info = $req_info_query->get_result()->fetch_assoc();
+            $tenant_id = $request_info['tenant_id'];
+            $subject = $request_info['subject'];
+
+            require_once('../includes/notifications.php');
+            $notification_message = "Your request '" . substr($subject, 0, 20) . "...' status is now: " . $status;
+            create_notification($conn, $tenant_id, 'tenant', $notification_message, 'user/maintenance.php#request-' . $request_id);
+
         } else {
             $error_message = "Failed to update maintenance request status!";
         }
@@ -125,7 +138,7 @@ include '../includes/header.php';
         <div style="display: grid; gap: 1.5rem;">
             <?php if ($maintenance_result->num_rows > 0): ?>
                 <?php while ($request = $maintenance_result->fetch_assoc()): ?>
-                    <div class="card maintenance-request" data-status="<?php echo $request['status']; ?>">
+                    <div id="request-<?php echo $request['id']; ?>" class="card maintenance-request" data-status="<?php echo $request['status']; ?>">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                             <div style="flex: 1;">
                                 <h3 style="color: #333; margin-bottom: 0.5rem;"><?php echo htmlspecialchars($request['subject']); ?></h3>
@@ -146,7 +159,19 @@ include '../includes/header.php';
                             <?php echo nl2br(htmlspecialchars($request['description'])); ?>
                         </p>
                         
-                        <div style="display: flex; justify-content: flex-end;">
+                        <!-- *** REVISED and CORRECTED bottom row container *** -->
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            
+                            <!-- Left side: View Image Button -->
+                            <div>
+                                <?php if ($request['image_path']): ?>
+                                    <button class="btn btn-sm btn-secondary" onclick="openProofModal('../uploads/maintenance/<?php echo htmlspecialchars($request['image_path']); ?>')">
+                                        <i class="fas fa-image"></i> View Attached Image
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Right side: Status Update Form -->
                             <form method="POST" style="display: flex; gap: 0.5rem; align-items: center;">
                                 <input type="hidden" name="action" value="update_status">
                                 <input type="hidden" name="request_id" value="<?php echo $request['id']; ?>">
@@ -167,6 +192,19 @@ include '../includes/header.php';
                     <p style="color: #666;">All caught up! No maintenance requests at the moment.</p>
                 </div>
             <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Reusing the proof modal for viewing maintenance images -->
+<div id="proofModal" class="modal modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>View Attachment</h2>
+            <span class="close" onclick="closeModal('proofModal')">×</span>
+        </div>
+        <div id="proofContent" style="padding: 1rem 0; text-align: center;">
+            <!-- Content loaded by JavaScript -->
         </div>
     </div>
 </div>

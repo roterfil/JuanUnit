@@ -20,6 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 if ($stmt->execute()) {
                     $success_message = "Announcement posted successfully!";
+                    // *** NEW: Notify all tenants about the announcement ***
+                    require_once('../includes/notifications.php');
+                    $notification_message = "New announcement: '" . substr($title, 0, 30) . "...'";
+                    notify_all_tenants($conn, $notification_message, '../user/index.php');
                 } else {
                     $error_message = "Failed to post announcement!";
                 }

@@ -17,6 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             if ($stmt->execute()) {
                 $success_message = "Payment marked as paid successfully!";
+                // *** NEW: Notify the tenant ***
+                $tenant_id_query = $conn->prepare("SELECT tenant_id, amount FROM payments WHERE id = ?");
+                $tenant_id_query->bind_param("i", $payment_id);
+                $tenant_id_query->execute();
+                $payment_info = $tenant_id_query->get_result()->fetch_assoc();
+                $tenant_id = $payment_info['tenant_id'];
+                $amount = $payment_info['amount'];
+                require_once('../includes/notifications.php');
+                $notification_message = "Your payment of ₱" . number_format($amount, 2) . " has been confirmed.";
+                create_notification($conn, $tenant_id, 'tenant', $notification_message, 'user/payments.php#payment-' . $payment_id);
             } else {
                 $error_message = "Failed to update payment status!";
             }
@@ -34,9 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt = $conn->prepare("INSERT INTO payments (tenant_id, amount, due_date) VALUES (?, ?, ?)");
                 $stmt->bind_param("ids", $tenant_id, $amount, $due_date);
                 
-                if ($stmt->execute()) {
-                    $success_count++;
-                }
+            if ($stmt->execute()) {
+                $new_payment_id = $conn->insert_id; // Get the new payment ID
+                $success_count++;
+
+                // Notify the tenant about the new bill with a specific link
+                require_once('../includes/notifications.php');
+                $formatted_due_date = date('M j, Y', strtotime($due_date));
+                $notification_message = "A new payment of ₱" . number_format($amount, 2) . " is due on " . $formatted_due_date . ".";
+                create_notification($conn, $tenant_id, 'tenant', $notification_message, 'user/payments.php#payment-' . $new_payment_id);
             }
             
             if ($success_count == $total_tenants) {
@@ -48,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
     }
+}
 }
 
 // Fetch payment statistics
@@ -187,7 +204,7 @@ include '../includes/header.php';
                 </thead>
                 <tbody>
                     <?php while ($payment = $payments_result->fetch_assoc()): ?>
-                        <tr style="<?php echo ($payment['status'] == 'Unpaid' && $payment['due_date'] < date('Y-m-d')) ? 'background-color: #fff5f5;' : ''; ?>">
+                        <tr id="payment-<?php echo $payment['id']; ?>" style="<?php echo ($payment['status'] == 'Unpaid' && $payment['due_date'] < date('Y-m-d')) ? 'background-color: #fff5f5;' : ''; ?>">
                             <td><?php echo htmlspecialchars($payment['full_name']); ?></td>
                             <td>
                                 <?php if ($payment['unit_number']): ?>
@@ -221,9 +238,10 @@ include '../includes/header.php';
                             </td>
                             <td>
                                 <?php if ($payment['proof_of_payment']): ?>
-                                    <a href="../uploads/<?php echo htmlspecialchars($payment['proof_of_payment']); ?>" target="_blank" class="btn btn-sm btn-primary">
+                                    <!-- *** CHANGE #1: Converted link to button for consistency *** -->
+                                    <button onclick="openProofModal('../uploads/<?php echo htmlspecialchars($payment['proof_of_payment']); ?>')" class="btn btn-sm btn-primary">
                                         <i class="fas fa-eye"></i> View
-                                    </a>
+                                    </button>
                                 <?php else: ?>
                                     <span style="color: #999;">No proof</span>
                                 <?php endif; ?>
@@ -254,7 +272,7 @@ include '../includes/header.php';
     <div class="modal-content">
         <div class="modal-header">
             <h2>Add Payment Record</h2>
-            <span class="close" onclick="closeModal('addPaymentModal')">&times;</span>
+            <span class="close" onclick="closeModal('addPaymentModal')">×</span>
         </div>
         <form method="POST">
             <input type="hidden" name="action" value="add_payment">
@@ -294,7 +312,7 @@ include '../includes/header.php';
             <div class="form-group">
                 <label for="amount">Amount (₱)</label>
                 <input type="number" id="amount" name="amount" class="form-control" step="0.01" min="0" required>
-                <button type="button" onclick="useUnitRent()" class="btn btn-sm btn-secondary" style="margin-top: 0.5rem;">
+                <button type="button" onclick="useUnitRent()" id="useUnitRentBtn" class="btn btn-sm btn-secondary" style="margin-top: 0.5rem; display: none;">
                     Use Unit Rent Amount
                 </button>
             </div>
@@ -312,65 +330,17 @@ include '../includes/header.php';
     </div>
 </div>
 
-<script>
-function loadUnitDetails() {
-    const unitSelect = document.getElementById('unit_id');
-    const unitDetails = document.getElementById('unit-details');
-    const unitRent = document.getElementById('unit-rent');
-    const tenantCount = document.getElementById('tenant-count');
-    const tenantsList = document.getElementById('tenants-list');
-    
-    if (unitSelect.value) {
-        const selectedOption = unitSelect.options[unitSelect.selectedIndex];
-        const rent = selectedOption.getAttribute('data-rent');
-        
-        unitRent.textContent = '₱' + parseFloat(rent).toLocaleString('en-US', {minimumFractionDigits: 2});
-        
-        // Load tenants for this unit
-        fetch(`get_unit_tenants.php?unit_id=${unitSelect.value}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    tenantCount.textContent = data.tenants.length + ' tenant(s)';
-                    
-                    let tenantsHtml = '';
-                    if (data.tenants.length > 0) {
-                        data.tenants.forEach(tenant => {
-                            tenantsHtml += `
-                                <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; cursor: pointer; hover:background-color: #f0f0f0;">
-                                    <input type="checkbox" name="tenant_ids[]" value="${tenant.id}" checked>
-                                    <span>${tenant.full_name}</span>
-                                    <small style="color: #666;">(${tenant.email})</small>
-                                </label>
-                            `;
-                        });
-                    } else {
-                        tenantsHtml = '<p style="color: #666; margin: 0;">No tenants assigned to this unit</p>';
-                    }
-                    
-                    tenantsList.innerHTML = tenantsHtml;
-                    unitDetails.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                tenantsList.innerHTML = '<p style="color: #ff6b6b;">Error loading tenants</p>';
-            });
-    } else {
-        unitDetails.style.display = 'none';
-    }
-}
-
-function useUnitRent() {
-    const unitSelect = document.getElementById('unit_id');
-    const amountInput = document.getElementById('amount');
-    
-    if (unitSelect.value) {
-        const selectedOption = unitSelect.options[unitSelect.selectedIndex];
-        const rent = selectedOption.getAttribute('data-rent');
-        amountInput.value = rent;
-    }
-}
-</script>
+<!-- *** CHANGE #2: Added the Proof Viewer Modal HTML *** -->
+<div id="proofModal" class="modal modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>View Proof of Payment</h2>
+            <span class="close" onclick="closeModal('proofModal')">×</span>
+        </div>
+        <div id="proofContent" style="padding: 1rem 0;">
+            <!-- Proof will be loaded here by JavaScript -->
+        </div>
+    </div>
+</div>
 
 <?php include '../includes/footer.php'; ?>

@@ -203,12 +203,19 @@ body {
     min-height: 100vh;
 }
 
+/* === START: STICKY SIDEBAR UPDATE === */
 .sidebar {
     width: 250px;
     background: white;
     box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     flex-shrink: 0;
+    
+    /* These 3 lines make the sidebar sticky */
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
+/* === END: STICKY SIDEBAR UPDATE === */
 
 .sidebar-header {
     padding: 2rem 1.5rem;
@@ -303,19 +310,22 @@ body {
     white-space: nowrap;
 }
 
-/* Status Badges */
+/* Solid Badge Styles */
 .badge {
-    padding: 0.4rem 0.8rem;
+    padding: 0.4rem 1rem;
     border-radius: 20px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
-.badge-success { background: rgba(17, 153, 142, 0.1); color: #11998e; }
-.badge-warning { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
-.badge-danger { background: rgba(255, 107, 107, 0.1); color: #ff6b6b; }
-.badge-primary { background: rgba(102, 126, 234, 0.1); color: #667eea; }
+.badge-success { background: #28a745; }
+.badge-warning { background: #ffc107; color: #212529; }
+.badge-danger  { background: #dc3545; }
+.badge-primary { background: #667eea; }
 
 
 /* Login Page Specific */
@@ -352,12 +362,8 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.5);
-    
-    /* This is the key: Centering using Flexbox */
     align-items: center;
     justify-content: center;
-    
-    /* Add some padding for smaller screens */
     padding: 1rem;
 }
 
@@ -368,10 +374,12 @@ body {
     width: 100%;
     max-width: 500px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+}
 
-    /* This is the second key: Making it scrollable */
-    max-height: 90vh; /* Limits height to 90% of the viewport */
-    overflow-y: auto;  /* Adds a scrollbar ONLY if the content is too tall */
+.modal.modal-lg .modal-content {
+    max-width: 800px;
 }
 
 .modal-header {
@@ -404,9 +412,27 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 2rem;
 }
-.unit-card { background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
-.unit-card-image { position: relative; height: 200px; }
-.unit-card-image img { width: 100%; height: 100%; object-fit: cover; }
+.unit-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.unit-card-image {
+    position: relative;
+    height: 220px;
+    background-color: #f0f2f5;
+    border-radius: 15px 15px 0 0;
+    overflow: hidden;
+}
+.unit-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
 .unit-card-status { position: absolute; top: 1rem; right: 1rem; font-size: 12px; }
 .unit-card-content { padding: 1.5rem; flex-grow: 1; }
 .unit-card-title { font-size: 1.5rem; }
@@ -505,4 +531,140 @@ body {
 @media (max-width: 768px) {
     .lp-v2-hero-text h1 { font-size: 2.5rem; }
     .lp-v2-nav-links { display: none; }
+}
+
+/* --- Notification System Styles --- */
+.notification-area {
+    position: fixed;
+    top: 20px;
+    right: 40px;
+    z-index: 1002;
+}
+
+.notification-bell {
+    font-size: 24px;
+    color: #333;
+    cursor: pointer;
+    position: relative;
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 18px;
+    height: 18px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 55px;
+    right: 0;
+    width: 350px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    overflow: hidden;
+    display: none; /* Hidden by default */
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.notification-dropdown.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9ff;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.notification-header span {
+    font-weight: 600;
+}
+
+.mark-as-read {
+    font-size: 12px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.notification-body {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 1rem;
+    display: block;
+    text-decoration: none;
+    color: #333;
+    border-bottom: 1px solid #e1e5e9;
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: #f8f9ff;
+}
+
+.notification-item.unread {
+    background-color: #eef2ff;
+}
+
+.notification-item p {
+    margin: 0 0 0.5rem 0;
+    line-height: 1.4;
+    font-size: 14px;
+}
+
+.notification-item small {
+    font-size: 12px;
+    color: #999;
+}
+
+.notification-item-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #999;
+}
+
+/* --- Item Highlight Effect --- */
+@keyframes highlight-fade {
+    from { background-color: #e3f2fd; border-color: #667eea; }
+    to { background-color: transparent; border-color: transparent; }
+}
+
+.highlight-item {
+    border: 2px solid transparent;
+    border-radius: 10px; /* Adjust to match your card/row radius */
+    animation: highlight-fade 3s ease-out;
 }
