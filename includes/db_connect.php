@@ -9,7 +9,7 @@ define('BASE_URL', 'http://localhost/juanunit/');
 // === START: Database Connection Logic ===
 $host = 'localhost';
 $username = 'root';
-$password = 'lukarine';
+$password = '';
 $database = 'juanunit_db';
 
 $conn = new mysqli($host, $username, $password, $database);
