@@ -9,7 +9,10 @@ include 'includes/header.php';
     <!-- Landing Page Navigation v2 -->
     <nav class="lp-v2-nav">
         <div class="lp-v2-container">
-            <a href="index.php" class="lp-v2-logo">JuanUnit</a>
+            <a href="index.php" class="lp-v2-logo">
+                <img src="images/logo.png" alt="JuanUnit Logo">
+                <span>JuanUnit</span>
+            </a>
             <div class="lp-v2-nav-links">
                 <a href="#features">Features</a>
                 <a href="#how-it-works">How It Works</a>
@@ -137,7 +140,10 @@ include 'includes/header.php';
         <div class="lp-v2-container">
             <div class="lp-v2-footer-content">
                 <div class="lp-v2-footer-col">
-                    <h3 class="lp-v2-logo">JuanUnit</h3>
+                    <a href="index.php" class="lp-v2-logo">
+                        <img src="images/logo.png" alt="JuanUnit Logo">
+                        <span>JuanUnit</span>
+                    </a>
                     <p>The modern solution for dormitory and apartment management.</p>
                 </div>
                 <div class="lp-v2-footer-col">

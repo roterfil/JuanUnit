@@ -680,3 +680,16 @@ body {
     border-radius: 10px; /* Adjust to match your card/row radius */
     animation: highlight-fade 3s ease-out;
 }
+
+/* === START: ADDED FOR IMAGE LOGO === */
+.lp-v2-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Adds space between the image and text */
+}
+
+.lp-v2-logo img {
+    height: 40px; /* Adjust the height as needed */
+    width: auto;
+}
+/* === END: ADDED FOR IMAGE LOGO === */
