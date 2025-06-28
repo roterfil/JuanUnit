@@ -76,6 +76,8 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE maintenance_requests ADD COLUMN is_archived TINYINT(1) DEFAULT 0;
+
 -- Add the missing image_path columns
 ALTER TABLE units ADD COLUMN image_path VARCHAR(255) NULL;
 ALTER TABLE maintenance_requests ADD COLUMN image_path VARCHAR(255) NULL;
