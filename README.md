@@ -2,7 +2,7 @@
 
 A modern, web-based property management system designed for dormitories, apartments, and rental units. JuanUnit provides a centralized platform for administrators to manage tenants, units, and payments, while offering tenants a self-service portal for payments and maintenance requests.
 
-![JuanUnit Dashboard](images/screenshot.png)
+![JuanUnit Dashboard](images/screenshot.png.png)
 
 ---
 
