@@ -98,7 +98,7 @@ if ((isset($_SESSION['admin_id']) || isset($_SESSION['tenant_id'])) && $is_dashb
                 // This section checks if the server is returning valid JSON.
                 // It helps catch errors if the PHP script fails.
                 fetch(url, { 
-                    method: 'POST',
+                    //method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest' // Standard header for AJAX requests
                     }

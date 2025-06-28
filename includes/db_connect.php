@@ -2,7 +2,7 @@
 // === START: THE DEFINITIVE, HARDCODED BASE_URL ===
 // This is the simplest and most reliable method for your local setup.
 // It will never fail.
-define('BASE_URL', 'http://localhost/roterfil-juanunit/');
+define('BASE_URL', 'http://localhost/juanunit/');
 // === END: BASE_URL Definition ===
 
 
