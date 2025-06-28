@@ -28,7 +28,7 @@ include 'includes/header.php';
                 <a href="register.php" class="lp-v2-btn-primary">Create Your Account <i class="fas fa-arrow-right"></i></a>
             </div>
             <div class="lp-v2-hero-visual">
-                <img src="https://assets.website-files.com/62e8f5c9dbfdcc62e8d287db/62e8f5cadbfdcca41bd28825_hero-3d-character.png" alt="3D illustration of a character managing tasks on a laptop">
+                <img src="images/img1.png" alt="3D illustration of a character managing tasks on a laptop">
                  <!-- Floating icons -->
                 <i class="fas fa-dollar-sign lp-v2-float-icon" style="top: 20%; left: -10%;"></i>
                 <i class="fas fa-key lp-v2-float-icon" style="top: 30%; right: -5%;"></i>
@@ -89,7 +89,7 @@ include 'includes/header.php';
                         <p>Sign up as an administrator and add your first units. Set rent, descriptions, and upload photos in minutes.</p>
                     </div>
                     <div class="lp-v2-timeline-visual">
-                        <img src="https://assets.website-files.com/62e8f5c9dbfdcc62e8d287db/62e8f5cadbfdcca838d2882a_features-3d-character-3.png" alt="3D illustration of a person building with blocks">
+                        <img src="images/img2.png" alt="3D illustration of a person building with blocks">
                     </div>
                 </div>
                 <!-- Step 2 -->
@@ -100,7 +100,7 @@ include 'includes/header.php';
                         <p>Tenants can register themselves, or you can assign them to units directly. They get instant access to their personal portal.</p>
                     </div>
                     <div class="lp-v2-timeline-visual">
-                         <img src="https://assets.website-files.com/62e8f5c9dbfdcc62e8d287db/62e8f5cadbfdcc1043d28829_features-3d-character-2.png" alt="3D illustration of a person sending a message">
+                         <img src="images/img3.png" alt="3D illustration of a person sending a message">
                     </div>
                 </div>
                 <!-- Step 3 -->
@@ -111,7 +111,7 @@ include 'includes/header.php';
                         <p>Let JuanUnit handle payment tracking, maintenance tickets, and announcements. Focus on growing your business.</p>
                     </div>
                     <div class="lp-v2-timeline-visual">
-                         <img src="https://assets.website-files.com/62e8f5c9dbfdcc62e8d287db/62e8f5cadbfdcc72f2d28828_features-3d-character-1.png" alt="3D illustration of a person relaxing with automated tasks in the background">
+                         <img src="images/img4.png" alt="3D illustration of a person relaxing with automated tasks in the background">
                     </div>
                 </div>
             </div>
