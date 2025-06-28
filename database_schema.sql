@@ -66,6 +66,20 @@ CREATE TABLE maintenance_requests (
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
 
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    user_type ENUM('admin', 'tenant') NOT NULL,
+    message VARCHAR(255) NOT NULL,
+    link VARCHAR(255),
+    is_read BOOLEAN DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add the missing image_path columns
+ALTER TABLE units ADD COLUMN image_path VARCHAR(255) NULL;
+ALTER TABLE maintenance_requests ADD COLUMN image_path VARCHAR(255) NULL;
+
 -- Insert default admin account (password: admin123)
 INSERT INTO admins (username, password, full_name) VALUES 
 ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'System Administrator');

@@ -625,7 +625,7 @@ body {
     text-decoration: none;
     color: #333;
     border-bottom: 1px solid #e1e5e9;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.4s ease, border-left-color 0.4s ease; 
 }
 
 .notification-item:last-child {
@@ -655,6 +655,18 @@ body {
     padding: 2rem;
     text-align: center;
     color: #999;
+}
+
+/* --- Add this at the end of the Notification System Styles section --- */
+
+.notification-item.unread {
+    background-color: #eef2ff; /* A light blue/lavender to indicate it's new */
+    border-left: 3px solid #667eea; /* A solid colored bar for emphasis */
+}
+
+/* Make the text slightly bolder on unread items */
+.notification-item.unread p {
+    font-weight: 500;
 }
 
 /* --- Item Highlight Effect --- */

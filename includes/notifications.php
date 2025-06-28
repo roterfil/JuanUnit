@@ -1,25 +1,25 @@
 <?php
-function create_notification($conn, $user_id, $user_type, $message, $link = '#') {
-    $stmt = $conn->prepare("INSERT INTO notifications (user_id, user_type, message, link) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("isss", $user_id, $user_type, $message, $link);
-    $stmt->execute();
+session_start();
+require_once('db_connect.php');
+
+$response = ['success' => false];
+
+if (isset($_SESSION['admin_id']) || isset($_SESSION['tenant_id'])) {
+    $is_admin = isset($_SESSION['admin_id']);
+    $user_id = $is_admin ? $_SESSION['admin_id'] : $_SESSION['tenant_id'];
+    $user_type = $is_admin ? 'admin' : 'tenant';
+
+    $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND user_type = ? AND is_read = 0");
+    $stmt->bind_param("is", $user_id, $user_type);
+    
+    if ($stmt->execute()) {
+        $response['success'] = true;
+    }
     $stmt->close();
 }
 
-function notify_all_admins($conn, $message, $link) {
-    $admin_query = "SELECT id FROM admins";
-    $admin_result = $conn->query($admin_query);
-    while ($admin = $admin_result->fetch_assoc()) {
-        create_notification($conn, $admin['id'], 'admin', $message, $link);
-    }
-}
-
-function notify_all_tenants($conn, $message, $link) {
-    // This function will notify ALL active tenants (those assigned to a unit)
-    $tenant_query = "SELECT id FROM tenants WHERE unit_id IS NOT NULL";
-    $tenant_result = $conn->query($tenant_query);
-    while ($tenant = $tenant_result->fetch_assoc()) {
-        create_notification($conn, $tenant['id'], 'tenant', $message, $link);
-    }
-}
+// Set the header to indicate a JSON response and output the result
+header('Content-Type: application/json');
+echo json_encode($response);
+exit();
 ?>
